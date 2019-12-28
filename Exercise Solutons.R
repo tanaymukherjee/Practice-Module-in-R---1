@@ -1,6 +1,4 @@
-# Homework Assignment 1
-# STA 9750
-# Tanay Mukherjee
+# Auhtor: Tanay Mukherjee
 
 # ----------------------------------------------
 # The Ultimate Halloween Candy Power Ranking
