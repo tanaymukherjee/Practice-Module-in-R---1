@@ -1,55 +1,29 @@
-# Homework Assignment 1
-# STA 9750
-# Tanay Mukherjee
+# Auhtor: Tanay Mukherjee
 
-# ----------------------------------------------
-# The Ultimate Halloween Candy Power Ranking
-
+# Que 1
 library(dplyr)
-library(tidyr)
-library(ggplot2)
+library(GGally)
 
-library(fivethirtyeight)
-data(candy_rankings)
-str(candy_rankings)
-head(candy_rankings)
+# Load the data
+salary <- read.csv("C:\\Users\\its_t\\Documents\\CUNY Fall 2019\\9750 - Software Tools and Techniques_Data Science\\HW2\\salary.csv")
 
-# 1. Find the top 5 best rated and top 5 worst rated candy.
-candy_rankings %>% View()
+View(salary)
 
-candy_rank <- candy_rankings %>% select(competitorname, winpercent) %>% arrange(desc(winpercent))
+levels(salary$Education)
+salary$Education = factor(salary$Education, levels = c("Low", "Medium", "High"))
 
-head(candy_rank, n=5)
-tail(candy_rank, n=5)
-
-# 2. Plot winpercent against sugarpercent. Do you see any association?
-# Now, plot winpercent against pricepercent. Do you see any association?
-
-candy_rankings %>% ggplot(aes(x=sugarpercent, y=winpercent)) + geom_point() +
-  xlab("Sugar Percent") + ylab ("Win Percent") + ggtitle ("Scatter plot: Sugar Percent v/s Win Percent") + geom_smooth()
-
-
-candy_rankings %>% ggplot(aes(x=pricepercent, y=winpercent)) + geom_point() +
-  xlab("Price Percent") + ylab ("Win Percent") + ggtitle ("Scatter plot: Price Percent v/s Win Percent") +  geom_smooth()
-
+ggplot(salary) +
+  aes(x = salary$Salary, y = salary$Anxiety, color = salary$Education) +
+  geom_point(alpha = 0.6)+geom_smooth(method = "lm")+
+  facet_grid(salary$Education ~ .) + xlab("Salary") + ylab("Anxiety") +
+  ggtitle("Relationship between salaries, anxiety, and education levels")
 
 library(GGally)
-candy_corr <- candy_rankings %>% select(competitorname, sugarpercent, pricepercent, winpercent)
-ggcorr(candy_corr, label = TRUE)
+ggcorr(salary, label = TRUE)
 
+ggpairs(salary)
 
-
-
-x = candy_rankings$sugarpercent
-y = candy_rankings$pricepercent
-z = candy_rankings$winpercent
-
-# Computation of sample slope, intercept and residuals
-lm(z~x)
-summary(lm(z~x))
-
-lm(z~y)
-summary(lm(z~y))
+# no relation between anxiety and salary  
 
 
 
@@ -57,319 +31,216 @@ summary(lm(z~y))
 
 
 
-# 3. Consider all the logical-type variables in the dataset.
-# For each logical variable, find the average difference in winpercent between 
-# the treats that satisfy the condition and the treats that don't satisfy it.
-# Which logical variable seems to have the strongest effect on winpercent?
 
+#----
+# Que 2
+# Load the data
+ir_nyc <- read.csv("C:\\Users\\its_t\\Documents\\CUNY Fall 2019\\9750 - Software Tools and Techniques_Data Science\\HW2\\nyc.csv")
+View(ir_nyc)
 
-candy_convert <- candy_rankings
-candy_convert[2:10] <- lapply(candy_convert[2:10],as.numeric)
-str(candy_convert)                                          
+ir_nyc <- ir_nyc %>% select(3:7)
+ggpairs(ir_nyc)
 
-new <- candy_rankings[2:10] %>% colnames()
-new
+ggcorr(ir_nyc, label = TRUE, digits = 2)
 
-diff <- function(arg) {
-  candy_select <- candy_convert %>% select(arg, winpercent) %>%
-    group_by_(arg)%>% summarize(avg = mean(winpercent)) %>% 
-    mutate(Diff = avg - lag(avg, default = avg[1])) 
-  candy_select[2,"Diff"]
-  return(abs(candy_select[2,"Diff"]))
-}
-
-for (i in new) {
-  print(paste(i,diff(i)))
-}
+# ggcorr(
+#   data = ir_nyc,
+#   cor_matrix = cor(dt[, -1], use = "pairwise")
+# )
 
 
 
+# 3.	Find 2 examples of cheap restaurants that have relatively good food and 2 examples
+# of expensive restaurants that have relatively bad food. 
+
+# ir_nyc %>% arrange(Price, -Food) %>% head(n=2)
+# ir_nyc %>% arrange(-Price, Food) %>% head(n=2)
+
+summary(ir_nyc)
+
+# Mean Price = 43
+# Mean Food Rating = 21
+
+#aes(col = ir_nyc$Restaurant)
+# + geom_text_repel(data = ir_nyc, aes(label = model))
+
+ir_nyc_filter <- ir_nyc %>% filter()
+
+# theme_set(theme_bw()) 
+# ir_plot <- ggplot(ir_nyc, aes(x=ir_nyc$Price, y = ir_nyc$Food)) +
+#   geom_point() + 
+#   labs(subtitle="Relationship between Foor rating and Price", y="Food", x="Price")
+# plot(ir_plot)
 
 
-# ----------------------------------------------
-# College admissions dataset
+library(ggalt)
+library(ggrepel)
 
-cad <- read.csv("http://vicpena.github.io/admin.csv")
-
-str(cad)
-head(cad)
-class(cad)
-
-# 1. Find the percentage of men who applied and got in and the percentage
-# of women who applied and got in. What do you see?
+new <- ir_nyc %>% mutate(diff = Food - Price)
+new %>% arrange(new$diff) %>%  head(2)
+new %>% arrange(-new$diff) %>%  head(2)
 
 
-cad1 <- cad %>% group_by(Admit,Gender) %>% summarize(Total_by_g_a = sum(Freq)) %>%
-  group_by(Gender) %>% mutate(Total_by_g = sum(Total_by_g_a)) %>%
-  group_by(Gender) %>% mutate(Percentage = 100*(Total_by_g_a/Total_by_g)) %>%
-  arrange(desc(Gender)) %>% View()
-cad1
+highlight <- ir_nyc %>% subset(Price < 25 & Food > 20 | Price  <35 & Food > 22.5
+                               | Price > 64 & Food < 20 | Price > 40 & Food < 17)
 
-# 2. Now, find the percentage of men who applied and got in by department.
-# Do the same with women. Compare the results with what you found in part 1.
+h1 <- highlight %>% filter(row_number()==1)
+h2 <- highlight %>% filter(row_number()==2)
+h3 <- highlight %>% filter(row_number()==3)
+h4 <- highlight %>% filter(row_number()==4)
 
-cad2 <- cad %>% group_by(Admit,Dept,Gender) %>% summarize(Total_g_a_d = sum(Freq)) %>% 
-  group_by(Dept,Gender) %>% mutate(Total_g_d = sum(Total_g_a_d)) %>%
-  group_by(Gender) %>% mutate(Percentage = 100*(Total_g_a_d/Total_g_d)) %>% 
-  arrange(desc(Gender)) %>% filter(Admit=="Admitted") %>% View()
-cad2
 
-# 3. Explain what is going on in this dataset.
-# Do you see any evidence of gender discrimination?
 
-cad2 %>% ggplot(aes(x=cad2$Dept, y=cad2$Percentage, group = cad2$Gender, colour = Gender)) +
-  geom_line() + xlab("Departments") + ylab("Percentage Admits") + 
-  ggtitle("Line chart by gender demonstrating percentage admits by departments") 
+theme_set(theme_bw()) 
+  ggplot(ir_nyc, aes(x=ir_nyc$Price, y = ir_nyc$Food)) + geom_point() +
+  labs(subtitle="Relationship between Foor rating and Price", y="Food Ratings", x="Price") +
+  geom_vline(xintercept = mean(ir_nyc$Price), color = "red", linetype = "dashed") +
+  geom_hline(yintercept = mean(ir_nyc$Food), color = "green", linetype = "dashed") +
+  geom_text(aes(x=41.5, label="\n Line for Mean Price", y=24), colour="red", angle=90, text=element_text(size=5)) +
+  geom_text(aes(x=22, label="\n Line for Mean Food Ratings", y=20.5), colour="green", angle=360, text=element_text(size=5)) +
+  geom_text(aes(x=22, label="\n Line for Mean Food Ratings", y=20.5), colour="green", angle=360, text=element_text(size=5)) +
+  geom_text_repel(data = highlight, aes(label=Restaurant, x=Price,y=Food, color = "blue"))+
+  geom_encircle(aes(x=Price,y=Food),data=h1,color="red", size=2,expand=1/100000, s_shape=0.9) +
+  geom_encircle(aes(x=Price,y=Food),data=h2,color="red", size=2,expand=1/100000, s_shape=0.9) +  
+  geom_encircle(aes(x=Price,y=Food),data=h3,color="red", size=2,expand=1/100000, s_shape=0.9) +
+  geom_encircle(aes(x=Price,y=Food),data=h4,color="red", size=2,expand=1/100000, s_shape=0.9) 
+
+# 4.	Suppose you're going on a date and want to use the information in this dataset
+# to pick where to go. Assume your budget is at most $40.
+# Assuming that you can get a table anywhere you want, where would you go and why? 
+  
+# ir_date <- ir_nyc %>% filter(Price <= 40) %>% 
+#   group_by(Restaurant,Price,Food,Decor,Service) %>%
+#   arrange(desc(Price,Food,Decor,Service))
+
+
+ir_date <- ir_nyc %>% filter(Price <= 40) %>% select(3:6)
+ir_date <- cbind(ir_date, Total = rowSums(ir_date)) 
+
+
+
+# colourCount <- length(unique(ir_nyc$Decor))
+# colourCount
+# getPalette <- colorRampPalette(brewer.pal(8, "Set1"))(colourCount)
+# getPalette
+
+ggplot(ir_nyc, aes(x=Price, y = Food)) +
+  geom_point(aes(col = Decor, size = Service)) + 
+  geom_text_repel(data = subset(ir_date, Restaurant== "Rughetta"), aes(label=Restaurant, x=Price,y=Food))
+  
   
 
-
-# ----------------------------------------------
-# Fandango movie ratings
-
-data(fandango)
-str(fandango)
-head(fandango)
-?fandango
-
-# 1. Identify the Top 5 best rated and Top 5 worst rated movies in the dataset.
-# Average over different platforms.
-
-write.csv(fandango, file = "C:\\Users\\its_t\\Documents\\CUNY Fall 2019\\9750 - Software Tools and Techniques_Data Science\\HW 1\\fandango.csv")
-
-# We will sum the rating for 6 platofrms and then divide by 5
-# to get the average across all platforms
-fandango_rank <- fandango %>% rowwise() %>% 
-  mutate(all_platforms_rating_sum = sum(rt_norm,rt_user_norm,metacritic_norm,metacritic_user_nom,imdb_norm)) %>%
-  mutate(new_avg_rating = all_platforms_rating_sum/5) %>% select(film,new_avg_rating) %>% arrange(desc(new_avg_rating))
-  
-head(fandango_rank, n=5)
-tail(fandango_rank, n=5)
-
-
-fandango_rank <- fandango %>% rowwise() %>% 
-  mutate(new_avg_rating = mean(rt_norm,rt_user_norm,metacritic_norm,metacritic_user_nom,imdb_norm)) %>%
-  select(film,new_avg_rating) %>% arrange(desc(new_avg_rating))
-
-
-# 2. Visualize the difference between Fandango stars and actual Fandango ratings.
-# Comment on what you see.
-fandango %>% ggplot(aes(x=fandango_stars, y=fandango_ratingvalue)) + geom_point() +
-  xlab("Fandango Stars") + ylab ("Fandango Ratings") + ggtitle ("Scatter plot: Fandango - Stars v/s Ratings") + geom_smooth(method = "lm")
-
-x = fandango$fandango_stars
-y = fandango$fandango_ratingvalue
-
-f_corr <- fandango %>% select(fandango_stars, fandango_ratingvalue)
-ggcorr(f_corr, label = TRUE)
-
-
-hist(y, prob=TRUE, ylim=c(0,.06), breaks=10) +
-  curve(dnorm(x, mean(y), sd(y)), add=TRUE, col="darkblue", lwd=2)
-
-
-# 3. Some movies are loved by the critics, but hated by the audience (and
-# sometimes, it's the other way around). Given the data you have, create a metric
-# to measure discrepancies between user and critic ratings. Create a table that
-# contains the Top 5 movies that seem to appeal to critics but not the audience,
-# and another table with the Top 5 movies that users seem to like more than critics do.
-
-fandango_rank_comp <- fandango %>% rowwise() %>% 
-  mutate(all_critics_rating_sum = sum(rt_norm,metacritic_norm)) %>%
-  mutate(new_avg_critic_rating = all_critics_rating_sum/2) %>%
-  mutate(all_users_rating_sum = sum(rt_user_norm,metacritic_user_nom)) %>%
-  mutate(new_avg_users_rating = all_users_rating_sum/2) %>%
-  mutate(critic_user_diff = new_avg_critic_rating - new_avg_users_rating) %>%
-  select(film,critic_user_diff) %>% arrange(desc(critic_user_diff))
-
-head(fandango_rank_comp, n=5)
-tail(fandango_rank_comp, n=5)
-
-
-fandango_rank_comp <- fandango %>% rowwise() %>% 
-  mutate(new_avg_critic_rating = mean(rt_norm,metacritic_norm)) %>%
-  mutate(new_avg_users_rating = mean(rt_user_norm,metacritic_user_nom)) %>%
-  mutate(critic_user_diff = new_avg_critic_rating - new_avg_users_rating) %>%
-  select(film,critic_user_diff) %>% arrange(desc(critic_user_diff))
-
-
-# ----------------------------------------------
-# Lahman Baseball Dataset
-
-lbd_teams <- read.csv("http://vicpena.github.io/sta9750/Teams1719.csv")
-
-str(lbd_teams)
-head(lbd_teams)
-
-# 1. Create a statistic that quantifies "home advantage".
-# You'll use this statistic for the next few questions.
-# There is more than one reasonable choice here.
-# Propose 2 different statistics and justify why you picked the one you'll use from now on.
-
-# statistic = (HomeW/(HomeW + HomeL)) / (AwayW/(AwayW + AwayL)))
-
-# 2. Find home advantage statistics for the American League (AL) and National League (NL) in the 2017-2019 period.
-# Comment on the results. Do you see any differences between leagues?
-# Do you see any evidence of home advantage at all? What are the years where there seems to be more
-# of a home advantage, and those where the effect might not be as strong
-# (or doesn't seem to be there)?
-
-lbd_teams <- lbd_teams %>% mutate(statistic_home_adv = (HomeW/(HomeW + HomeL)) / (AwayW/(AwayW + AwayL)))
-
-lbd_teams %>% group_by(League) %>% summarize(home_adv_ratio = mean(statistic_home_adv))
-lbd_teams
-lbd_teams %>% group_by(League,Year) %>% summarize(home_adv_ratio = mean(statistic_home_adv))
-
-
-# 3. Find the teams that had the highest and lowest home advantage effect
-# by league in 2017,2018, and 2019 separately. Comment on the results.
 
 library(sqldf)
 
-lbd_top <- lbd_teams %>% group_by(League,Team,Year) %>%
-  summarize(home_adv_ratio = mean(statistic_home_adv)) %>%
-  arrange(desc(home_adv_ratio,Year))
+sqldf("select Restaurant from ( select *, dense_rank() over 
+(partition by Price, Food, Decor, Service order by Food desc, Decor desc, Service desc)rn from ir_date) where rn=1")
 
-lbd_top %>% View()
+# 5.	Create a figure that displays the relationship between
+# price, food, decor, service,and the East / West indicator.
+# Your figure can contain more than one plot / facet / panel.
+# Make sure that the labels and the title are interpretable. 
+# Interpret in detail the relationships that you see.
 
+
+# library(ggExtra)
+# 
+# theme_set(theme_bw()) 
+# ir_plot <- ggplot(ir_nyc, aes(x=ir_nyc$Price, y = ir_nyc$Food)) +
+#   geom_point(aes(col = Decor, size = Service)) +
+#   geom_smooth(method="loess", se=F) + facet_grid(ir_nyc$East ~ .) +
+#   labs(subtitle="Relationship between all variables", 
+#        y="Price", 
+#        x="Food", 
+#        title="Scatterplot")
+# plot(ir_plot)
 
-sqldf("select * from ( select *, dense_rank() over 
-(partition by Year,League order by home_adv_ratio desc)rn from lbd_top) where rn=1")
-      
-sqldf("select * from ( select *, row_number() over 
-(partition by Year, League order by home_adv_ratio asc)rn from lbd_top) where rn=1")
 
 
 
-# 4. Which franchise had the highest average home advantage in the 2017-2019 period?
-# Which one had the lowest average home advantage effect?
 
-lbd_teams %>% group_by(Team) %>% summarize(home_adv_ratio = mean(statistic_home_adv)) %>%
-  arrange(desc(home_adv_ratio)) %>% View ()
 
-lbd_teams %>% group_by(Team) %>% summarize(home_adv_ratio = mean(statistic_home_adv)) %>%
-  arrange(desc(home_adv_ratio)) %>% top_n(1)
 
-lbd_teams %>% group_by(Team) %>% summarize(home_adv_ratio = mean(statistic_home_adv)) %>%
-  arrange(desc(home_adv_ratio)) %>% top_n(-1)
+colourCount <- length(unique(ir_nyc$Decor))
+colourCount
+getPalette <- colorRampPalette(brewer.pal(8, "Set1"))(colourCount)
+getPalette
 
+theme_set(theme_bw()) 
+ir_plot <- ggplot(ir_nyc, aes(x=ir_nyc$Price, y = ir_nyc$Food)) +
+  geom_point(aes(col = as.factor(Decor), size = Service)) +
+  geom_smooth(method="loess", se=F) + facet_grid(ir_nyc$East ~ .) +
+  scale_color_manual(values = getPalette) +
+  labs(subtitle="Relationship between all variables", 
+       y="Food", 
+       x="Price", 
+       title="Scatterplot") +
+  scale_color_manual(values = getPalette)
+plot(ir_plot)
 
-# 5. After completing these exercises, what did you learn about home advantage effect
-# in the MLB? You're welcome to try out a few new queries to illustrate your points.
 
 
-x <- lbd_teams %>% group_by(statistic_home_adv > 1 ) %>% summarize(total_home_adv = n())
 
 
+#----
+# Que 3
+# Load the data
 
+idd <- read.table("http://users.stat.ufl.edu/~winner/data/interfaith.dat", header = FALSE)
+names(idd)[1:5] <- c("SEC", "Religion", "Gender", "Interfaith dating", "Count")
 
+names <- c(1:4)
+idd[,names] <- lapply(idd[,names],factor)
+str(idd)
 
-#lbd_teams %>% filter(League == "NL")
+levels(idd$SEC) = c("Low", "Middle", "High")
+levels(idd$Religion) = c("Protestant", "Catholic")
+levels(idd$Gender) = c("Male", "Female")
+levels(idd$`Interfaith dating`) = c("Yes", "No")
+str(idd)
 
-lbd_teams %>% ggplot(aes(x=lbd_teams$statistic_home_adv, y=lbd_teams$Team, group = lbd_teams$Year, colour = lbd_teams$Year)) +
-  geom_line() + xlab("Departments") + ylab("Percentage Admits") + 
-  ggtitle("Line chart by gender demonstrating percentage admits by departments") 
 
 
 
+# Create a figure that shows the relationship between 
+# socioeconomic class, religion, gender, and the indicator of interfaith dating .
+# Your figure can contain more than one plot / facet / panel.
+# Interpret in detail the relationships that you see in the plots.
+# Make sure that the labels and the title are interpretable. 
 
 
-lbd_teams %>% ggplot(aes(x=lbd_teams$statistic_home_adv, y=lbd_teams$Year, group = lbd_teams$League, colour = lbd_teams$League)) +
-  geom_line() + xlab("Departments") + ylab("Percentage Admits") + 
-  ggtitle("Line chart by gender demonstrating percentage admits by departments") 
 
+# ggplot(idd) +
+#   aes(x = idd$SEC, y = idd$Count, color = idd$Religion) +
+#   geom_point(alpha = 0.6)+geom_smooth(method = "lm")+
+#   facet_grid(idd$Gender ~ .) + facet_grid(idd$`Interfaith dating` ~ .)+
+#   xlab("SEC") + ylab("Frequency") + ggtitle("Interfaith Data Analysis")
+# 
+# 
+# colourCount <- length(unique(idd))
+# colourCount
+# getPalette <- colorRampPalette(brewer.pal(8, "Set1"))(colourCount)
+# getPalette
+# 
+# 
+# scale_color_manual(values = getPalette) +
+#   
+# theme_set(theme_bw()) 
+# idd_plot <- ggplot(idd, aes(x=idd$SEC, y = idd$Count)) +
+#   geom_point(aes(col = idd$Religion, size = idd$Gender)) +
+#   geom_smooth(method="loess", se=F) + facet_grid(idd$`Interfaith dating` ~ .) +
+#     labs(subtitle="Relationship between all variables", 
+#        y="Food", 
+#        x="Price", 
+#        title="Scatterplot") +
+#   scale_color_manual(values = getPalette)
+# plot(idd_plot)
+
+ggplot(idd) +
+  aes(x= SEC, y = Count, fill = `Interfaith dating`, labels = TRUE) +
+  geom_col(position = "dodge") +
+  facet_grid(Gender ~ Religion) +
+  ggtitle("Relationship between different factors involved in Interfaith dating")+
+  xlab("Socioeconomic Class") + ylab("Frequency") +
+  geom_text(aes(label = Count, Count = Count + 0.05), position = position_dodge(0.9),vjust = 0)
 
-
-
-
-
-
-
-
-
-
-
-
-
-# ----------------------------------------------
-# Lahman Baseball Dataset
-
-# In this exercise, you'll work with the Lahman Baseball datasets, which you can access
-# after installing library(Lahman). After installing the package, you can type in ?Lahman to
-# get some information on the structure of the datasets and see what's available. If you
-# want to do a class project with baseball data, you're welcome to use this resource.
-
-#install.packages("Lahman")
-library(Lahman)
-lahman_pitching <- Lahman::Pitching
-lahman_people <- Lahman::People
-
-colnames(lahman_pitching)
-colnames(lahman_people)
-
-# Aging in pitchers and batters
-
-# 1. Let's consider data from 2018 only and look at the subset of pitchers who pitched
-# more than 250 outs. Plot the earned run average (ERA; small values are good
-# and big ones are bad) of the pitchers against their age. Do you see any patterns?
-# Now, find a table with the average ERAs by age. Do you see any patterns?
-
-lahman_age <- lahman_pitching %>% inner_join(lahman_people, by = "playerID") %>%
-  filter(yearID == 2018 & IPouts > 250 ) %>% mutate(Age = yearID - birthYear) 
-
-lahman_age %>% View()
-
-lahman_age %>% ggplot(aes(x=Age, y=ERA)) + geom_point() + geom_smooth()
-
-lahman_age %>% group_by(Age) %>% summarize(Avg_ERA = mean(ERA)) %>% View()
-
-
-
-
-# 2. Again, let's look at pitchers who pitched more than 250 outs in 2018. Identify the
-# top 5 best and worst pitchers, in terms of ERA.
-
-lahman_age %>% select(playerID, ERA, nameFirst, nameLast) %>% arrange(ERA) %>% head(n=5)
-lahman_age %>% select(playerID, ERA, nameFirst, nameLast) %>% arrange(ERA) %>% tail(n=5)
-
-
-# 3. Consider the best pitcher (in terms of ERA) that you found in part 2. Find his ERA
-# by season throughout his career. Based on this alone, do you think he's already
-# "peaked"? If you like baseball, you're welcome to share your opinion here as well.
-
-lahman_pitching %>% filter(playerID=="degroja01") %>% select(playerID, yearID, ERA) %>%
-  arrange(desc(yearID))
-
-
-# 4. Let's do a similar exercise, but now with batting average (BA; more is better).
-# Use the battingStats function in Lahman to find BAs. Consider data from 2018
-# only and look at players that have more than 200 at bats (AB). Plot BA against
-# age. Do you see any patterns? Find a table with average BAs by age. Explain what you see.
-
-lahman_batting_stats <- Lahman::battingStats()
-colnames(lahman_batting_stats)
-lahman_batting_stats %>% View()
-
-lahman_batting_stats <- lahman_batting_stats %>% inner_join(lahman_people, by = "playerID") %>%
-  filter(yearID==2018 & AB > 200) %>% mutate(Age = yearID - birthYear)
-
-lahman_batting_stats %>% ggplot(aes(x=Age, y=BA)) + geom_point() + geom_smooth()
-
-lahman_batting_stats %>% group_by(Age) %>% summarize(Avg_BA = mean(BA)) %>% View()
-
-# 5. Again, let's look at players with more than 200 ABs in 2018. Find the top 5 best
-# and worst players in terms of BA.
-
-lahman_batting_stats %>% select(playerID, BA, nameFirst, nameLast) %>% arrange(desc(BA)) %>% head(n=5)
-lahman_batting_stats %>% select(playerID, BA, nameFirst, nameLast) %>% arrange(desc(BA)) %>% tail(n=5)
-
-
-
-#6. Consider the best player (in terms of BA) that you found in part 5. Find his BA by
-# season throughout his career. Based on this alone, do you think he's already
-# "peaked"? If you like baseball, you're welcome to share your opinion here as well.
-
-lahman_batting_stats <- lahman_batting_stats %>% inner_join(lahman_people, by = "playerID") %>%
-  filter(AB > 200) %>% mutate(Age = yearID - birthYear)
-
-lahman_batting_stats %>% filter(playerID=="bettsmo01") %>% select(playerID, yearID, BA) %>%
-  arrange(desc(yearID))
