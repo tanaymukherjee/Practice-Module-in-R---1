@@ -1,0 +1,17 @@
+Dataset:  interfaith.dat
+
+Source: G.D. Hampe(1971). "Interfaith Dating: Religion, Social Class
+and Premarital Sexual Attitudes," Sociological Analysis, Vol.32, #2,
+pp.97-106.
+
+Description: Tabulation of Socio-economic status, gender, religion,
+and inter-faith dating status.
+
+Variables/Columns
+Socio-Economic Class   8  /* 1=Low, 2=Middle, 3=High  */
+Religion   16  /* 1=Protestant, 2=Catholic  */
+Gender    24   /* 1=Male, 2=Female  */
+Interfaith dating 32 /* 1=Yes, 2=No  */
+Count  38-40
+
+http://users.stat.ufl.edu/~winner/data/interfaith.dat
